@@ -79,7 +79,7 @@ const RouletteManager = {
     ctx.font = "bold 12px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("TEMU", cx, cy);
+    ctx.fillText("YCTEMU", cx, cy);
   },
 
   openModal() {
@@ -108,7 +108,7 @@ const RouletteManager = {
 
     // 100%OFFの区画にピタリと止まる計算
     // segments[5] または segments[0] が真上（-90度）に来るよう計算
-    const baseRotations = 360 * 6; 
+    const baseRotations = 360 * 6;
     const targetDeg = baseRotations + 240; // 100% OFF スロット
 
     wheel.style.transition = "transform 4s cubic-bezier(0.15, 0.9, 0.2, 1)";
@@ -132,7 +132,7 @@ const RouletteManager = {
             <h3 class="win-title">🎉 おめでとうございます！ 🎉</h3>
             <p class="win-subtitle">【最高賞】全品100%OFF（¥0）クーポンが当選しました！</p>
             <div class="coupon-ticket">
-              <span class="ticket-code">クーポン: <strong>TEMU-ZERO-100</strong></span>
+              <span class="ticket-code">クーポン: <strong>YCTEMU-ZERO-100</strong></span>
               <span class="ticket-status">自動適用済み (有効期限: 本日中)</span>
             </div>
             <button class="win-claim-btn" onclick="RouletteManager.claimReward()">
