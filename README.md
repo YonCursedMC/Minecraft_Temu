@@ -4,3 +4,4 @@ https://github.com/YonCursedMC/Uncertain_Error371<br>
 ↑こちらが参考になるかもです。<br><br>
 
 このバージョンはあくまでジョークです。絶対に悪用しないでください。
+取り扱い注意です
