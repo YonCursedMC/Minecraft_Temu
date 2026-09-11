@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YCTEMU(TEMUぽい) | 億万長者気分でお買い物 (全品¥0)</title>
+  <meta name="description" content="TEMU風0円ショッピング型Minecraftファイルダウンロードサイト。MOD、データパック、リソースパック、配布マップが全品0円で手に入る！">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Poppins:wght@600;800;900&display=swap"
+    rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+
+<body>
+
+  <!-- トップアナウンスバー -->
+  <aside class="top-announcement-bar" aria-label="お知らせ">
+    <div class="announcement-left">
+      <span class="announcement-badge">送料無料</span>
+      <span>🚀 全品即時ダウンロード無料配送中！今すぐ手に入れよう</span>
+    </div>
+    <div class="announcement-right">
+      <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+        <i class="fa-brands fa-github"></i> GitHub Pages対応
+      </a>
+      <span><i class="fa-solid fa-earth-americas"></i> 配送先: お前のPC</span>
+    </div>
+  </aside>
+
+  <!-- メインヘッダー -->
+  <header class="site-header">
+    <div class="header-container">
+      <!-- ロゴ -->
+      <a href="#" class="brand-logo" onclick="window.location.reload(); return false;">
+        <div class="logo-temu-box">
+          <i class="fa-solid fa-cube"></i> YCTEMU
+        </div>
+        <div class="logo-subtext">
+          <span class="slogan">億万長者気分でお買い物</span>
+          <div>全品 ¥0 (100% OFF)</div>
+        </div>
+      </a>
+
+      <!-- 検索バー -->
+      <div class="header-search">
+        <div class="search-input-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon-left"></i>
+          <input type="text" id="searchInput" placeholder="検索..." autocomplete="off">
+          <button type="button" class="search-btn" onclick="App.renderProducts()">検索</button>
+        </div>
+      </div>
+
+      <!-- アクションボタン -->
+      <div class="header-actions">
+        <button type="button" class="header-action-item" onclick="RouletteManager.openModal()" title="ラッキースピン">
+          <i class="fa-solid fa-dice flame-icon"></i>
+          <span>スピン</span>
+        </button>
+
+        <button type="button" class="header-action-item header-cart-btn" onclick="App.toggleCart(true)" title="カートを見る">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span>カート</span>
+          <span class="cart-count-badge" id="cartCountBadge" style="display: none;">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- クーポンリボン -->
+  <aside class="coupon-ribbon" id="headerCouponBadge" aria-label="特別特典">
+    <span><i class="fa-solid fa-tag"></i> 【初回限定】100%OFFクーポン配布中！</span>
+    <button type="button" class="spin-link-btn" onclick="RouletteManager.openModal()">
+      ルーレットを回す <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </aside>
+
+  <!-- フラッシュセールバナー -->
+  <section class="hero-flash-section">
+    <div class="hero-flash-container">
+      <div class="flash-title-group">
+        <h2><i class="fa-solid fa-bolt flame-icon"></i> 24時間限定 フラッシュセール</h2>
+        <p>全マイクラ拡張ファイルが本日限り 100% OFF！カートに入れて ¥0 で一括ゲット！</p>
+      </div>
+      <div class="flash-timer-box">
+        <span class="timer-label"><i class="fa-regular fa-clock"></i> セール終了まで</span>
+        <div class="countdown-timer-val">03:42:15</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- カテゴリナビ -->
+  <nav class="category-nav-bar" aria-label="商品カテゴリ">
+    <div class="category-tabs-container" id="categoryTabs">
+      <!-- JSで描画 -->
+    </div>
+  </nav>
+
+  <!-- メインレイアウト -->
+  <main class="main-layout">
+    <div class="catalog-header">
+      <div class="catalog-title">
+        <i class="fa-solid fa-fire flame-icon"></i> 本日の注目アイテム
+      </div>
+      <div class="catalog-subtitle">
+        全品 ¥0 / 配送料 ¥0 / 即時ダウンロード
+      </div>
+    </div>
+
+    <!-- 商品カード一覧グリッド -->
+    <section class="product-grid" id="productGrid" aria-label="商品一覧">
+      <!-- JSで描画 -->
+    </section>
+  </main>
+
+  <!-- 商品詳細モーダル -->
+  <div class="modal-backdrop" id="productDetailModal">
+    <div class="modal-box">
+      <button class="modal-close-btn" onclick="App.closeDetail()">&times;</button>
+      <div class="detail-modal-content">
+        <div class="detail-top-row">
+          <div class="modal-img-container"></div>
+          <div class="modal-info">
+            <h3 class="modal-title"></h3>
+            <div class="modal-price-box">
+              <span class="modal-now-price">¥0</span>
+              <span class="modal-orig-price"></span>
+              <span class="modal-badge-100">100% OFF</span>
+            </div>
+            <div class="modal-tags"></div>
+            <div class="modal-rating"></div>
+          </div>
+        </div>
+
+        <div class="detail-file-specs">
+          <div class="spec-item">
+            <span class="spec-label">ファイル名:</span>
+            <span class="spec-val modal-filename"></span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">容量:</span>
+            <span class="spec-val modal-filesize"></span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">対応バージョン:</span>
+            <span class="spec-val modal-version"></span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">人気度:</span>
+            <span class="spec-val"><span class="modal-sold"></span> (<span class="modal-stock"
+                style="color:red"></span>)</span>
+          </div>
+        </div>
+
+        <p class="modal-desc"></p>
+
+        <!-- レビュー -->
+        <div class="modal-reviews-section">
+          <h4><i class="fa-solid fa-comments"></i> プレイヤーレビュー</h4>
+          <div class="modal-reviews-list"></div>
+        </div>
+
+        <!-- アクションボタン -->
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="App.detailAddToCart()">
+            <i class="fa-solid fa-cart-plus"></i> カートに入れる
+          </button>
+          <button class="btn-primary" onclick="App.detailInstantBuy()">
+            <i class="fa-solid fa-bolt"></i> 今すぐ¥0で手に入れる
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- カートドロワー & オーバーレイ -->
+  <div class="cart-overlay" id="cartOverlay" onclick="App.toggleCart(false)"></div>
+  <aside class="cart-drawer" id="cartDrawer" aria-label="ショッピングカート">
+    <div class="cart-drawer-header">
+      <h3><i class="fa-solid fa-cart-shopping"></i> ショッピングカート</h3>
+      <button class="modal-close-btn" onclick="App.toggleCart(false)">&times;</button>
+    </div>
+
+    <div class="cart-items-container" id="cartItemsList">
+      <!-- カート商品一覧 -->
+    </div>
+
+    <div class="cart-empty-state" id="cartEmptyState">
+      <i class="fa-solid fa-cart-arrow-down"></i>
+      <p>カートに商品が入っていません</p>
+      <button class="btn-secondary" onclick="App.toggleCart(false)">商品を探す</button>
+    </div>
+
+    <div class="cart-drawer-footer">
+      <div class="cart-summary-row">
+        <span>定価合計:</span>
+        <span id="cartOriginalTotal">¥0</span>
+      </div>
+      <div class="cart-summary-row">
+        <span>TEMU特別割引:</span>
+        <span style="color: red;">- 100% OFF</span>
+      </div>
+      <div class="cart-summary-row">
+        <span>配送料 (即時DL):</span>
+        <span style="color: #2e7d32; font-weight: bold;">¥0 (無料)</span>
+      </div>
+      <div class="cart-total-row">
+        <span>お支払い合計:</span>
+        <span class="cart-total-price">¥0</span>
+      </div>
+      <div class="savings-notice" id="cartSavings">¥0 おトク!</div>
+      <button type="button" class="checkout-btn" id="checkoutBtn" onclick="App.checkoutCart()">
+        ¥0 で注文を確定してダウンロード <i class="fa-solid fa-arrow-down"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- 注文完了＆ダウンロードモーダル -->
+  <div class="modal-backdrop" id="checkoutSuccessModal">
+    <div class="modal-box">
+      <button class="modal-close-btn" onclick="App.closeSuccessModal()">&times;</button>
+      <div class="success-modal-content">
+        <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <h3 class="success-title">ご注文ありがとうございます！</h3>
+        <p class="success-desc">合計金額 <strong>¥0</strong> で決済が完了しました。<br>ファイルのダウンロードが自動的に開始されます。</p>
+
+        <div class="download-links-list">
+          <!-- ダウンロードファイル一覧 -->
+        </div>
+
+        <button class="btn-primary" onclick="App.closeSuccessModal()" style="width: 100%;">
+          買い物を続ける
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 初回ラッキースピン (ルーレット) モーダル -->
+  <div class="modal-backdrop" id="rouletteModal">
+    <div class="modal-box roulette-modal-box">
+      <button class="modal-close-btn" onclick="RouletteManager.closeModal()">&times;</button>
+      <h3 class="roulette-title">🎰 TEMU ラッキースピン 🎰</h3>
+      <p class="roulette-subtitle">ルーレットを回して最大100%OFFクーポンを獲得！</p>
+
+      <div class="wheel-outer-wrapper" id="wheelWrapper">
+        <div class="wheel-pointer"></div>
+        <canvas id="rouletteWheel" class="wheel-canvas" width="260" height="260"></canvas>
+      </div>
+
+      <div id="rouletteResult" style="display: none;"></div>
+
+      <button type="button" class="spin-action-btn" id="spinBtn" onclick="RouletteManager.spin()">
+        今すぐスピン！ <i class="fa-solid fa-play"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div class="toast-msg" id="toastNotification">
+    <i class="fa-solid fa-circle-check" style="color: #4caf50;"></i>
+    <span class="toast-text"></span>
+  </div>
+
+  <!-- リアルタイム購入通知 (TEMU名物) -->
+  <div class="live-activity-box" id="liveActivityToast">
+    <div class="live-avatar"><i class="fa-solid fa-bag-shopping"></i></div>
+    <div class="live-text"></div>
+  </div>
+
+  <!-- フッター -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-features">
+        <div class="feature-box">
+          <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+          <div>
+            <div class="feature-title">全品 ¥0 永久無料保証</div>
+            <div class="feature-desc">クレジットカード不要、1円もかかりません</div>
+          </div>
+        </div>
+        <div class="feature-box">
+          <div class="feature-icon"><i class="fa-solid fa-bolt"></i></div>
+          <div>
+            <div class="feature-title">即時ファイルダウンロード</div>
+            <div class="feature-desc">注文確定と同時にブラウザで自動DL開始</div>
+          </div>
+        </div>
+        <div class="feature-box">
+          <div class="feature-icon"><i class="fa-solid fa-truck-fast"></i></div>
+          <div>
+            <div class="feature-title">GitHub Pages完全対応</div>
+            <div class="feature-desc">サーバー不要で誰でも無料Web公開可能</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-copyright">
+        <p>2026 YonCursedMC. All files are free to download.</p>
+        <p style="margin-top: 6px; font-size: 11px;">※
+          本サイトはパロディ・ショッピングUIのファイルダウンロードサイトです。実際のお金は一切発生しませんし、ウイルスもありませんが、自己責任でアクセス、ダウンロードしてください。
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/products.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/roulette.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
