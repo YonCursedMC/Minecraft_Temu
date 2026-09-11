@@ -19,7 +19,7 @@ const PRODUCTS = [
     description: "???",
     tags: ["CreepyMinecraftVersion", "ノロクラ"],
     downloadUrl: "downloads/XiAoMiProMax.zip",
-    fileName: "XiAoMiProMax",
+    fileName: "XiAoMiProMax.zip",
     fileSize: "10MB",
     version: "1.0.0",
     reviews: [
