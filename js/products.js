@@ -23,7 +23,7 @@ const PRODUCTS = [
     rating: 5,
     reviewsCount: 999999,
     freeShipping: true,
-    description: "???",
+    description: "PrismLauncher形式です。自己責任でプレイしてください。",
     tags: ["CreepyMinecraftVersion", "ノロクラ"],
     downloadUrl: "downloads/XiAoMiProMax.zip",
     fileName: "XiAoMiProMax.zip",
