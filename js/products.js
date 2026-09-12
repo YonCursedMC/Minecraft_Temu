@@ -29,7 +29,7 @@ const PRODUCTS = [
     fileName: "XiAoMiProMax.zip",
     fileSize: "10MB",
     version: "1.0.0",
-    image: "assets/ad0.png",
+    image: "https://raw.githubusercontent.com/YonCursedMC/Minecraft_Temu/main/assets/ad0.png",
     reviews: [
       { user: "YCM_Staff", rating: 5, date: "3秒前", comment: "Sugosugiru" },
       { user: "魔理沙", rating: 1, date: "823万年前", comment: "ウイルスだろこれ" },
