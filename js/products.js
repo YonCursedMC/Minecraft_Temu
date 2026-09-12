@@ -29,7 +29,7 @@ const PRODUCTS = [
     fileName: "XiAoMiProMax.zip",
     fileSize: "10MB",
     version: "1.0.0",
-    image: "https://raw.githubusercontent.com/YonCursedMC/Minecraft_Temu/main/assets/ad0.png",
+    image: "assets/ad0.png",
     reviews: [
       { user: "YCM_Staff", rating: 5, date: "3秒前", comment: "Sugosugiru" },
       { user: "魔理沙", rating: 1, date: "823万年前", comment: "ウイルスだろこれ" },
@@ -126,13 +126,19 @@ function getProductImageHtml(product) {
   if (!product) return '<div class="product-placeholder"><i class="fa-solid fa-cube"></i></div>';
 
   if (product.image) {
-    return `<img src="${product.image}" alt="${product.title}" class="product-img" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'product-placeholder\\'><i class=\\'fa-solid fa-cube\\'></i></div>';">`;
+    return `<img src="${product.image}" alt="${product.title || ''}" class="product-img" loading="lazy" onerror="this.onerror=null; this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"><div class="product-placeholder" style="display:none;"><i class="fa-solid fa-image"></i></div>`;
   }
 
   if (product.iconSvg) {
     return product.iconSvg;
   }
 
-  // 画像もSVGも未指定の場合のデフォルトアイコン
-  return `<div class="product-placeholder"><i class="fa-solid fa-box-open"></i></div>`;
+  // 画像未指定時のカテゴリ別デフォルトアイコン
+  let iconClass = "fa-cube";
+  if (product.category === "ソースコード") iconClass = "fa-file-code";
+  else if (product.category === "ノロクラ変更箇所のみ") iconClass = "fa-file-zipper";
+  else if (product.category === "リソース") iconClass = "fa-box-archive";
+
+  return `<div class="product-placeholder"><i class="fa-solid ${iconClass}"></i></div>`;
 }
+
