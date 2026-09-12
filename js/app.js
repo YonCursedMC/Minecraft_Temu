@@ -93,7 +93,7 @@ const App = {
       return `
         <div class="product-card" onclick="App.openDetail('${product.id}')">
           <div class="card-media">
-            ${product.iconSvg}
+            ${getProductImageHtml(product)}
             ${badgeHtml}
             <div class="discount-pill">100% OFF</div>
           </div>
@@ -154,7 +154,7 @@ const App = {
     const modal = document.getElementById("productDetailModal");
     if (!modal) return;
 
-    modal.querySelector(".modal-img-container").innerHTML = product.iconSvg;
+    modal.querySelector(".modal-img-container").innerHTML = getProductImageHtml(product);
     modal.querySelector(".modal-title").textContent = product.title;
     modal.querySelector(".modal-orig-price").textContent = `¥${product.originalPrice.toLocaleString()}`;
     modal.querySelector(".modal-desc").textContent = product.description;

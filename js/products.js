@@ -1,5 +1,12 @@
 // MINETEMU 商品データ定義
 // ユーザーはこのファイルを編集するだけで商品や配布ファイルを簡単に追加・差し替えできます。
+//
+// 【画像について】
+// ・PNG / JPG / WebP 画像を使う場合:
+//   image: "assets/your_item.png"  （または外部URL "https://..."）
+// ・インラインSVGを使う場合:
+//   iconSvg: `<svg>...</svg>`
+// どちらでも自動的に綺麗に表示されます！ドット絵PNGもくっきり表示されます。
 
 const PRODUCTS = [
   {
@@ -22,6 +29,7 @@ const PRODUCTS = [
     fileName: "XiAoMiProMax.zip",
     fileSize: "10MB",
     version: "1.0.0",
+    image: "assets/ad0.png",
     reviews: [
       { user: "YCM_Staff", rating: 5, date: "3秒前", comment: "Sugosugiru" },
       { user: "魔理沙", rating: 1, date: "823万年前", comment: "ウイルスだろこれ" },
@@ -106,5 +114,25 @@ const PRODUCTS = [
 
 // カテゴリ一覧
 const CATEGORIES = [
-  { id: "ノロクラ", name: "ノロクラ", icon: "fa-globe" }
+  { id: "all", name: "すべて", icon: "fa-fire" },
+  { id: "ノロクラ", name: "ノロクラ", icon: "fa-globe" },
+  { id: "ノロクラ変更箇所のみ", name: "パッチ", icon: "fa-bolt" },
+  { id: "ソースコード", name: "ソースコード", icon: "fa-code" },
+  { id: "リソース", name: "リソース", icon: "fa-box-archive" }
 ];
+
+// 商品画像のHTML生成（PNG/JPG/WebP/外部URL、またはSVGに対応）
+function getProductImageHtml(product) {
+  if (!product) return '<div class="product-placeholder"><i class="fa-solid fa-cube"></i></div>';
+
+  if (product.image) {
+    return `<img src="${product.image}" alt="${product.title}" class="product-img" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'product-placeholder\\'><i class=\\'fa-solid fa-cube\\'></i></div>';">`;
+  }
+
+  if (product.iconSvg) {
+    return product.iconSvg;
+  }
+
+  // 画像もSVGも未指定の場合のデフォルトアイコン
+  return `<div class="product-placeholder"><i class="fa-solid fa-box-open"></i></div>`;
+}

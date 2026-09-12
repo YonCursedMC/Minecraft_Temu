@@ -132,7 +132,7 @@ const CartManager = {
       return `
         <div class="cart-item" data-id="${product.id}">
           <div class="cart-item-img">
-            ${product.iconSvg}
+            ${getProductImageHtml(product)}
           </div>
           <div class="cart-item-details">
             <h4 class="cart-item-title">${product.title}</h4>
