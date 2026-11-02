@@ -1251,7 +1251,7 @@
 +}
 --- /dev/null
 +++ net/minecraft/src/FullscreenFakeWarning.java
-@@ -1,0 +1,1489 @@
+@@ -1,0 +1,1762 @@
 +package net.minecraft.src;
 +
 +import com.sun.jna.Library;
@@ -1312,6 +1312,14 @@
 +	private static int cursorTick = 0;
 +	private static final Object lock = new Object();
 +
++	// 単体実行フラグ (java net.minecraft.src.FullscreenFakeWarning で直接実行された場合)
++	private static boolean isStandalone = false;
++
++	public static void main(String[] args) {
++		isStandalone = true;
++		showWarning((EntityPlayerSP)null);
++	}
++
 +	// フェーズ管理: false = 偽警告画面, true = フルスクリーンiPhone当選画面
 +	private static boolean isIPhonePhase = false;
 +
@@ -1357,15 +1365,50 @@
 +		new Waypoint(155, 0.18F, 0.12F), // 「⚠️ 重大なセキュリティ脅威」見出しへ
 +		new Waypoint(190, 0.35F, 0.38F), // 被害ファイル・ログ画面を巡回
 +		new Waypoint(220, -0.08F, 0.78F), // 左下のファイアウォール通知ウィンドウへ寄り道
-+		new Waypoint(250, 0.35F, 0.53F), // 「0120-TEMU-HELP」サポート番号へ
-+		new Waypoint(285, 0.19F, 0.69F), // 「今すぐサポートに連絡」ボタンへ
-+		new Waypoint(320, 0.22F, 0.70F), // ボタン上で小刻みにうろうろ（誘導演出）
-+		new Waypoint(350, 0.44F, 0.69F), // 「無視」ボタンへ移動
-+		new Waypoint(380, 0.44F, 0.69F), // 「無視」の上で躊躇
-+		new Waypoint(410, 0.50F, 0.50F), // 中央へ
-+		new Waypoint(440, 1.12F, 0.92F)  // 再び外側へ
++		new Waypoint(255, 0.85F, 0.82F), // 右下のWindows Classic風ストリームCMDへ寄り道（流れるログを監視）
++		new Waypoint(285, 0.35F, 0.53F), // 「0120-TEMU-HELP」サポート番号へ
++		new Waypoint(320, 0.19F, 0.69F), // 「今すぐサポートに連絡」ボタンへ
++		new Waypoint(355, 0.22F, 0.70F), // ボタン上で小刻みにうろうろ（誘導演出）
++		new Waypoint(385, 0.44F, 0.69F), // 「無視」ボタンへ移動
++		new Waypoint(415, 0.44F, 0.69F), // 「無視」の上で躊躇
++		new Waypoint(445, 0.50F, 0.50F), // 中央へ
++		new Waypoint(480, 1.12F, 0.92F)  // 再び外側へ
 +	};
-+	private static final int TOTAL_WAYPOINT_TICKS = 440;
++	private static final int TOTAL_WAYPOINT_TICKS = 480;
++
++	// Windows Classic風コマンドプロンプトに流れるリアルタイムストリームログ
++	private static final String[] CLASSIC_STREAM_LOGS = new String[]{
++		"[MEM_DUMP] 0x00401000: 4D 5A 90 00 03 00 00 00 04 00 00 00 FF FF 00 00",
++		"[MEM_DUMP] 0x00401010: B8 00 00 00 00 00 00 00 40 00 00 00 00 00 00 00",
++		"[INJECT] Target PID=1314 (javaw.exe) -> Hooking VirtualAllocEx() ... OK",
++		"[PAYLOAD] Injecting C:\\WINDOWS\\SYSTEM\\BUTTER.DLL (Size: 842,100 bytes)",
++		"[TEMU_STREAM] ByteStream connected to 185.220.101.5:8080 [SSLv3 ENCRYPTED]",
++		"[EXPLOIT] Scanning Minecraft Saves: %APPDATA%\\.minecraft\\saves\\world",
++		"[LOCK_TASK] Encrypting level.dat ... Sector 0x000F4B [STATUS: LOCKED]",
++		"[WARNING] System integrity breached! Kernel handles leaked: 4,092",
++		"[TEMU_RAT] Uploading chunk #0429 [████████████████████] 100% OK",
++		"[NET_TRACE] Remote Operator joined channel #TEMU_CONTROL_JP",
++		"[REMOTE_CMD] Executing: net stop WinDefend /y",
++		"[ALERT] Service 'Windows Defender Antivirus' was forcibly STOPPED",
++		"[BUFFER_OVF] Stack canary overwritten at 0x7FFE0340",
++		"[COUPON_DAEMON] Generating infinite 99% OFF coupons for Player...",
++		"[INVENTORY] Hooking player.inventory.mainInventory[0..35] -> DROPPED",
++		"[TEMU_PAY] Redirecting credit card cache -> 185.220.101.5",
++		"[REGISTRY] RegSetValue: HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
++		"[AUDIO] Synth alarm frequency: 820Hz / 1150Hz alternated",
++		"[SYS_LOCK] Keyboard hook installed (VK_ESCAPE, VK_LWIN disabled)",
++		"[TEMU_STREAM] Awaiting operator command: CALL 0120-TEMU-HELP",
++		"[IPHONE_PHASE] iPhone 35 Pro Max allocation buffer allocated",
++		"[DUMP_HEX] 0x7FFF00: EF BE AD DE 00 13 14 00 54 45 4D 55 5F 52 41 54",
++		"[SYS_INTEGRITY] CRC32 check failed on kernel32.dll (Expected 0x8FA4B1)",
++		"[NETWORK] Sending keep-alive beacon to remote command center...",
++		"[STREAM] Total encrypted world blocks: 1,842,900 / 2,000,000",
++		"[DAEMON] Thread #04 ButterWorker state: ACTIVE (Priority: REALTIME)",
++		"[WARNING] DO NOT TURN OFF YOUR COMPUTER OR SHUT DOWN JAVA",
++		"[STREAM] 0x008A20: 7F 45 4C 46 02 01 01 00 00 00 00 00 00 00 00 00",
++		"[STREAM] Decrypt token verified by server: [0xTEMU_DISCOUNT_APPROVED]",
++		"[STREAM] Flushing socket buffer -> 65536 bytes transmitted"
++	};
 +
 +	private static void stopAllTimers() {
 +		synchronized(lock) {
@@ -1568,7 +1611,14 @@
 +					int w3Y = Math.min(sh - w3H - 54, winY + winH - 185);
 +					drawBackWindowFirewall(g2, w3X, w3Y, w3W, w3H, lockSeconds[0], cursorTick);
 +
-+					// 4. 最前面ウィンドウ④ (中央: メインの Windows Defender 緊急システム警告ウィンドウ)
++					// 4. 背面ウィンドウ④ (右下〜中央右: Windows Classic風 MS-DOS コマンドプロンプト 高速流れるストリームログ)
++					int w4W = Math.min(540, sw - 80);
++					int w4H = Math.min(280, sh - 120);
++					int w4X = Math.min(sw - w4W - 20, winX + winW - 290);
++					int w4Y = Math.min(sh - w4H - 52, winY + winH - 210);
++					drawClassicWindowCmdStream(g2, w4X, w4Y, w4W, w4H, cursorTick);
++
++					// 5. 最前面ウィンドウ⑤ (中央: メインの Windows Defender 緊急システム警告ウィンドウ)
 +					for(int i = 14; i >= 1; i--) {
 +						g2.setColor(new Color(0, 0, 0, 12 + (14 - i) * 4));
 +						g2.fill(new RoundRectangle2D.Float(winX - i, winY - i + 4, winW + i * 2, winH + i * 2, 12, 12));
@@ -1961,25 +2011,26 @@
 +				g2.setFont(getWinFont(Font.PLAIN, 11));
 +				g2.drawString("🔍 ここに入力して検索 (保護ロック中)", 58, tbY + 24);
 +
-+				// タスクバー上の起動中ウィンドウタブ (4つ重なっている感)
++				// タスクバー上の起動中ウィンドウタブ (5つ重なっている感)
 +				String[] taskTabs = new String[]{
-+					"🛡️ Windows セキュリティ (スキャン中)",
-+					"⬛ 管理者: cmd.exe - defender_diag",
-+					"🧱 Windows ファイアウォール通知",
-+					"⚠️ 緊急システム警告 (アクティブ)"
++					"🛡️ セキュリティ (スキャン中)",
++					"⬛ 管理者: cmd.exe",
++					"📟 MS-DOS (TEMU_STREAM)",
++					"🧱 ファイアウォール通知",
++					"⚠️ 緊急警告 (アクティブ)"
 +				};
-+				int tabX = 282;
++				int tabW = Math.min(180, Math.max(120, (sw - 580) / taskTabs.length));
++				int tabX = 278;
 +				for(int i = 0; i < taskTabs.length; i++) {
-+					int tabW = 215;
-+					boolean isActiveTab = (i == 3);
++					boolean isActiveTab = (i == 4);
 +					g2.setColor(isActiveTab ? new Color(55, 65, 85) : new Color(32, 38, 48));
 +					g2.fill(new RoundRectangle2D.Float(tabX, tbY + 5, tabW, 30, 5, 5));
 +					g2.setColor(isActiveTab ? new Color(0, 164, 239) : new Color(216, 59, 1));
 +					g2.fillRect(tabX + 8, tbY + 33, tabW - 16, 2);
 +					g2.setFont(getWinFont(isActiveTab ? Font.BOLD : Font.PLAIN, 11));
 +					g2.setColor(isActiveTab ? Color.WHITE : new Color(200, 205, 215));
-+					g2.drawString(taskTabs[i], tabX + 10, tbY + 24);
-+					tabX += tabW + 8;
++					g2.drawString(taskTabs[i], tabX + 8, tbY + 24);
++					tabX += tabW + 6;
 +				}
 +
 +				// タスクバー右端システムトレイ
@@ -2221,6 +2272,222 @@
 +				g2.setColor(new Color(150, 150, 150));
 +				g2.setStroke(new BasicStroke(1.0F));
 +				g2.draw(new RoundRectangle2D.Float(wx, wy, ww, wh, 8, 8));
++			}
++
++			/**
++			 * 背面ウィンドウ④ (右下〜中央右): Windows Classic風 MS-DOS / コマンドプロンプト (高速流れるストリームログ)
++			 */
++			private void drawClassicWindowCmdStream(Graphics2D g2, int wx, int wy, int ww, int wh, int tick) {
++				// 1. クラシック立体ドロップシャドウ
++				for(int i = 8; i >= 1; i--) {
++					g2.setColor(new Color(0, 0, 0, 14 + (8 - i) * 3));
++					g2.fillRect(wx - i + 2, wy - i + 4, ww + i * 2, wh + i * 2);
++				}
++
++				// 2. クラシック外枠ベース (Windows 95/98/2000の伝統的グレー #D4D0C8)
++				Color winBg = new Color(212, 208, 200);
++				g2.setColor(winBg);
++				g2.fillRect(wx, wy, ww, wh);
++
++				// 外枠の3Dベベル
++				// 最外周: 上左 白, 下右 黒
++				g2.setColor(Color.WHITE);
++				g2.drawLine(wx, wy, wx + ww - 1, wy);
++				g2.drawLine(wx, wy, wx, wy + wh - 1);
++				g2.setColor(Color.BLACK);
++				g2.drawLine(wx + ww - 1, wy, wx + ww - 1, wy + wh - 1);
++				g2.drawLine(wx, wy + wh - 1, wx + ww - 1, wy + wh - 1);
++
++				// 1px内側: 上左 明るいグレー(#DFDFDF), 下右 暗いグレー(#808080)
++				g2.setColor(new Color(236, 233, 216));
++				g2.drawLine(wx + 1, wy + 1, wx + ww - 2, wy + 1);
++				g2.drawLine(wx + 1, wy + 1, wx + 1, wy + wh - 2);
++				g2.setColor(new Color(128, 128, 128));
++				g2.drawLine(wx + ww - 2, wy + 1, wx + ww - 2, wy + wh - 2);
++				g2.drawLine(wx + 1, wy + wh - 2, wx + ww - 2, wy + wh - 2);
++
++				// 3. クラシックタイトルバー (濃紺 -> 青グラデーション)
++				int tbX = wx + 3;
++				int tbY = wy + 3;
++				int tbW = ww - 6;
++				int tbH = 18;
++				GradientPaint titleGrad = new GradientPaint(
++					tbX, tbY, new Color(0, 0, 128),
++					tbX + tbW, tbY, new Color(16, 132, 208)
++				);
++				g2.setPaint(titleGrad);
++				g2.fillRect(tbX, tbY, tbW, tbH);
++
++				// MS-DOS アイコン風ボックス [C:\]
++				g2.setColor(Color.BLACK);
++				g2.fillRect(tbX + 2, tbY + 2, 14, 14);
++				g2.setColor(Color.WHITE);
++				g2.drawRect(tbX + 2, tbY + 2, 14, 14);
++				g2.setFont(new Font(Font.MONOSPACED, Font.BOLD, 8));
++				g2.drawString("C:", tbX + 3, tbY + 12);
++
++				// タイトル文字 (白太字・影なし・伝統フォント)
++				g2.setFont(getWinFont(Font.BOLD, 11));
++				g2.setColor(Color.WHITE);
++				g2.drawString("MS-DOS プロンプト - TEMU_STREAM [実行中]", tbX + 20, tbY + 13);
++
++				// クラシック 3連ボタン [ _ ] [ □ ] [ ✕ ]
++				int btnSize = 14;
++				int btnY = tbY + 2;
++				int closeBx = tbX + tbW - btnSize - 2;
++				int maxBx = closeBx - btnSize - 2;
++				int minBx = maxBx - btnSize - 2;
++
++				drawClassicButton(g2, minBx, btnY, btnSize, btnSize, "_");
++				drawClassicButton(g2, maxBx, btnY, btnSize, btnSize, "□");
++				drawClassicButton(g2, closeBx, btnY, btnSize, btnSize, "✕");
++
++				// 4. クラシック ツールバー風コントロールバー (フォント・選択・マーク)
++				int barY = wy + 23;
++				g2.setColor(new Color(128, 128, 128));
++				g2.drawLine(wx + 2, barY + 21, wx + ww - 3, barY + 21);
++				g2.setColor(Color.WHITE);
++				g2.drawLine(wx + 2, barY + 22, wx + ww - 3, barY + 22);
++
++				// [ 自動 ▼ ] コンボボックス風
++				int cbX = wx + 6;
++				int cbY = barY + 2;
++				int cbW = 54;
++				int cbH = 17;
++				g2.setColor(Color.WHITE);
++				g2.fillRect(cbX, cbY, cbW, cbH);
++				g2.setColor(new Color(128, 128, 128));
++				g2.drawRect(cbX, cbY, cbW, cbH);
++				g2.setFont(getWinFont(Font.PLAIN, 10));
++				g2.setColor(Color.BLACK);
++				g2.drawString("自動", cbX + 5, cbY + 12);
++				g2.setColor(new Color(212, 208, 200));
++				g2.fillRect(cbX + cbW - 14, cbY + 1, 13, cbH - 1);
++				g2.setColor(new Color(64, 64, 64));
++				g2.drawRect(cbX + cbW - 14, cbY + 1, 13, cbH - 1);
++				g2.drawString("▼", cbX + cbW - 12, cbY + 12);
++
++				// ツールバーミニボタン風
++				String[] tools = new String[]{"選択", "コピー", "貼付", "監視"};
++				int toolX = cbX + cbW + 6;
++				for(int i = 0; i < tools.length; i++) {
++					int tW = 34;
++					int tH = 17;
++					g2.setColor(new Color(212, 208, 200));
++					g2.fillRect(toolX, cbY, tW, tH);
++					// ベベル
++					g2.setColor(Color.WHITE);
++					g2.drawLine(toolX, cbY, toolX + tW - 1, cbY);
++					g2.drawLine(toolX, cbY, toolX, cbY + tH - 1);
++					g2.setColor(new Color(128, 128, 128));
++					g2.drawLine(toolX + tW - 1, cbY, toolX + tW - 1, cbY + tH - 1);
++					g2.drawLine(toolX, cbY + tH - 1, toolX + tW - 1, cbY + tH - 1);
++
++					g2.setFont(getWinFont(Font.PLAIN, 10));
++					g2.setColor(Color.BLACK);
++					g2.drawString(tools[i], toolX + 4, cbY + 12);
++					toolX += tW + 3;
++				}
++
++				// 右端のステータス表示
++				g2.setFont(getConsoleFont(Font.BOLD, 10));
++				g2.setColor(new Color(0, 100, 0));
++				g2.drawString("STREAM: 44.1 KB/s", wx + ww - 125, cbY + 12);
++
++				// 5. コンソール領域 (黒背景 + インセット彫り込み)
++				int conX = wx + 5;
++				int conY = wy + 48;
++				int conW = ww - 10;
++				int conH = wh - 54;
++
++				// 彫り込み枠 (上左 暗いグレー&黒、下右 白&明るいグレー)
++				g2.setColor(new Color(128, 128, 128));
++				g2.drawLine(conX - 1, conY - 1, conX + conW, conY - 1);
++				g2.drawLine(conX - 1, conY - 1, conX - 1, conY + conH);
++				g2.setColor(Color.BLACK);
++				g2.drawLine(conX, conY, conX + conW - 1, conY);
++				g2.drawLine(conX, conY, conX, conY + conH - 1);
++
++				g2.setColor(Color.WHITE);
++				g2.drawLine(conX - 1, conY + conH + 1, conX + conW + 1, conY + conH + 1);
++				g2.drawLine(conX + conW + 1, conY - 1, conX + conW + 1, conY + conH + 1);
++
++				// コンソール内部黒塗り
++				g2.setColor(Color.BLACK);
++				g2.fillRect(conX + 1, conY + 1, conW - 1, conH - 1);
++
++				// クリップを設定して外側へのはみ出しを防止
++				java.awt.Shape prevClip = g2.getClip();
++				g2.setClip(conX + 1, conY + 1, conW - 2, conH - 2);
++
++				// 6. 流れるテキストの描画 (マトリックス / ログストリーム演出)
++				int lineH = 14;
++				int totalLogs = CLASSIC_STREAM_LOGS.length;
++				int visibleLines = (conH / lineH) + 2;
++
++				// tick に応じて下から上へスクロール
++				int lineOffset = tick % totalLogs;
++				int pixelSub = (tick * 2) % lineH;
++
++				g2.setFont(getConsoleFont(Font.PLAIN, 11));
++
++				for(int i = 0; i < visibleLines; i++) {
++					int logIdx = (lineOffset + i) % totalLogs;
++					String lineText = CLASSIC_STREAM_LOGS[logIdx];
++					int drawY = conY + 14 + (i * lineH) - pixelSub;
++
++					// テキストのプレフィックスに応じた色分け
++					if(lineText.startsWith("[ALERT]") || lineText.startsWith("[WARNING]")) {
++						g2.setColor(new Color(255, 80, 80));
++					} else if(lineText.startsWith("[MEM_DUMP]") || lineText.startsWith("[DUMP_HEX]")) {
++						g2.setColor(new Color(80, 240, 240));
++					} else if(lineText.startsWith("[PAYLOAD]") || lineText.startsWith("[LOCK_TASK]")) {
++						g2.setColor(new Color(255, 230, 80));
++					} else if(lineText.startsWith("[TEMU_STREAM]") || lineText.startsWith("[EXPLOIT]")) {
++						g2.setColor(new Color(50, 255, 120));
++					} else {
++						g2.setColor(new Color(0, 255, 65)); // サイバーグリーン
++					}
++
++					g2.drawString(lineText, conX + 8, drawY);
++				}
++
++				// 最下行: C:\TEMU> プロンプトと点滅カーソル
++				int promptY = conY + conH - 6;
++				g2.setColor(Color.BLACK);
++				g2.fillRect(conX + 1, promptY - 12, conW - 2, 16);
++				g2.setColor(new Color(240, 240, 240));
++				String promptStr = "C:\\TEMU\\INJECTOR> stream.exe --live";
++				g2.drawString(promptStr, conX + 8, promptY);
++				if(tick % 16 < 8) {
++					int pw = g2.getFontMetrics().stringWidth(promptStr);
++					g2.setColor(new Color(0, 255, 65));
++					g2.fillRect(conX + 8 + pw + 2, promptY - 10, 7, 12);
++				}
++
++				g2.setClip(prevClip);
++			}
++
++			private void drawClassicButton(Graphics2D g2, int bx, int by, int bw, int bh, String sym) {
++				g2.setColor(new Color(212, 208, 200));
++				g2.fillRect(bx, by, bw, bh);
++				// 上左: 白
++				g2.setColor(Color.WHITE);
++				g2.drawLine(bx, by, bx + bw - 1, by);
++				g2.drawLine(bx, by, bx, by + bh - 1);
++				// 下右: 黒
++				g2.setColor(Color.BLACK);
++				g2.drawLine(bx + bw - 1, by, bx + bw - 1, by + bh - 1);
++				g2.drawLine(bx, by + bh - 1, bx + bw - 1, by + bh - 1);
++				// 内側下右: 暗いグレー
++				g2.setColor(new Color(128, 128, 128));
++				g2.drawLine(bx + bw - 2, by + 1, bx + bw - 2, by + bh - 2);
++				g2.drawLine(bx + 1, by + bh - 2, bx + bw - 2, by + bh - 2);
++
++				g2.setFont(getWinFont(Font.BOLD, 9));
++				g2.setColor(Color.BLACK);
++				int sw = g2.getFontMetrics().stringWidth(sym);
++				g2.drawString(sym, bx + (bw - sw) / 2, by + bh - 3);
 +			}
 +
 +			private void drawCenteredText(Graphics2D g2, String text, int cx, int y) {
@@ -2557,6 +2824,12 @@
 +				mc.setIngameFocus();
 +			}
 +		} catch(Throwable ignored) {}
++
++		if(isStandalone) {
++			try {
++				System.exit(0);
++			} catch(Throwable ignored) {}
++		}
 +	}
 +
 +	/**
