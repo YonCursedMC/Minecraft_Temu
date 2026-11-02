@@ -1251,7 +1251,7 @@
 +}
 --- /dev/null
 +++ net/minecraft/src/FullscreenFakeWarning.java
-@@ -1,0 +1,1003 @@
+@@ -1,0 +1,1489 @@
 +package net.minecraft.src;
 +
 +import com.sun.jna.Library;
@@ -1261,6 +1261,7 @@
 +import java.awt.Cursor;
 +import java.awt.Dimension;
 +import java.awt.Font;
++import java.awt.GradientPaint;
 +import java.awt.Graphics;
 +import java.awt.Graphics2D;
 +import java.awt.Point;
@@ -1349,19 +1350,22 @@
 +
 +	private static final Waypoint[] WAYPOINTS = new Waypoint[]{
 +		new Waypoint(0,   1.12F, 0.92F), // 画面右下外側から出現
-+		new Waypoint(45,  0.97F, 0.03F), // 右上 [✕] 閉じるボタンへ素早く移動
-+		new Waypoint(75,  0.97F, 0.03F), // [✕] の上でホバー（閉じようとするが迷う）
-+		new Waypoint(110, 0.18F, 0.12F), // 「⚠️ 重大なセキュリティ脅威」見出しへ
-+		new Waypoint(145, 0.35F, 0.38F), // 被害ファイル・ログ画面を巡回
-+		new Waypoint(175, 0.35F, 0.53F), // 「0120-TEMU-HELP」サポート番号へ
-+		new Waypoint(210, 0.19F, 0.69F), // 「今すぐサポートに連絡」ボタンへ
-+		new Waypoint(245, 0.22F, 0.70F), // ボタン上で小刻みにうろうろ（誘導演出）
-+		new Waypoint(280, 0.44F, 0.69F), // 「無視」ボタンへ移動
-+		new Waypoint(310, 0.44F, 0.69F), // 「無視」の上で躊躇
-+		new Waypoint(345, 0.50F, 0.50F), // 中央へ
-+		new Waypoint(380, 1.12F, 0.92F)  // 再び外側へ
++		new Waypoint(35, -0.10F, -0.08F), // 背面のスキャンウィンドウ（左上）を巡回
++		new Waypoint(65,  1.05F, -0.05F), // 背面のコマンドプロンプト（右上）へ移動
++		new Waypoint(95,  0.97F, 0.03F), // メインウィンドウ右上 [✕] 閉じるボタンへ素早く移動
++		new Waypoint(125, 0.97F, 0.03F), // [✕] の上でホバー（閉じようとするが迷う）
++		new Waypoint(155, 0.18F, 0.12F), // 「⚠️ 重大なセキュリティ脅威」見出しへ
++		new Waypoint(190, 0.35F, 0.38F), // 被害ファイル・ログ画面を巡回
++		new Waypoint(220, -0.08F, 0.78F), // 左下のファイアウォール通知ウィンドウへ寄り道
++		new Waypoint(250, 0.35F, 0.53F), // 「0120-TEMU-HELP」サポート番号へ
++		new Waypoint(285, 0.19F, 0.69F), // 「今すぐサポートに連絡」ボタンへ
++		new Waypoint(320, 0.22F, 0.70F), // ボタン上で小刻みにうろうろ（誘導演出）
++		new Waypoint(350, 0.44F, 0.69F), // 「無視」ボタンへ移動
++		new Waypoint(380, 0.44F, 0.69F), // 「無視」の上で躊躇
++		new Waypoint(410, 0.50F, 0.50F), // 中央へ
++		new Waypoint(440, 1.12F, 0.92F)  // 再び外側へ
 +	};
-+	private static final int TOTAL_WAYPOINT_TICKS = 380;
++	private static final int TOTAL_WAYPOINT_TICKS = 440;
 +
 +	private static void stopAllTimers() {
 +		synchronized(lock) {
@@ -1536,30 +1540,61 @@
 +				g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 +
 +				if(!isIPhonePhase) {
-+					// ==================== フェーズ0: Windows Defender 偽警告 ====================
-+					g2.setColor(new Color(0, 0, 0, 190));
-+					g2.fillRect(0, 0, getWidth(), getHeight());
++					// ==================== フェーズ0: Microsoft風背景 + 4枚重ね偽警告ウィンドウ ====================
++					int sw = getWidth();
++					int sh = getHeight();
 +
-+					for(int i = 10; i >= 1; i--) {
-+						g2.setColor(new Color(0, 0, 0, 10 + (10 - i) * 3));
-+						g2.fill(new RoundRectangle2D.Float(winX - i, winY - i + 3, winW + i * 2, winH + i * 2, 12, 12));
++					// 0. Microsoft / Windows Security 風フルスクリーン背景
++					drawMicrosoftBackground(g2, sw, sh, lockSeconds[0], cursorTick);
++
++					// 1. 背面ウィンドウ① (左上: Windows セキュリティ スキャン結果・白系ウィンドウ)
++					int w1W = Math.min(540, sw - 80);
++					int w1H = Math.min(350, sh - 120);
++					int w1X = Math.max(18, winX - 185);
++					int w1Y = Math.max(88, winY - 95);
++					drawBackWindowScan(g2, w1X, w1Y, w1W, w1H, progressVal[0], cursorTick);
++
++					// 2. 背面ウィンドウ② (右上: 管理者コマンドプロンプト System32 通信監視・黒系ウィンドウ)
++					int w2W = Math.min(520, sw - 80);
++					int w2H = Math.min(330, sh - 120);
++					int w2X = Math.min(sw - w2W - 18, winX + winW - 335);
++					int w2Y = Math.max(96, winY - 75);
++					drawBackWindowCmd(g2, w2X, w2Y, w2W, w2H, cursorTick);
++
++					// 3. 背面ウィンドウ③ (左下: Microsoft Windows ファイアウォール 緊急遮断ダイアログ)
++					int w3W = Math.min(490, sw - 80);
++					int w3H = Math.min(250, sh - 120);
++					int w3X = Math.max(28, winX - 145);
++					int w3Y = Math.min(sh - w3H - 54, winY + winH - 185);
++					drawBackWindowFirewall(g2, w3X, w3Y, w3W, w3H, lockSeconds[0], cursorTick);
++
++					// 4. 最前面ウィンドウ④ (中央: メインの Windows Defender 緊急システム警告ウィンドウ)
++					for(int i = 14; i >= 1; i--) {
++						g2.setColor(new Color(0, 0, 0, 12 + (14 - i) * 4));
++						g2.fill(new RoundRectangle2D.Float(winX - i, winY - i + 4, winW + i * 2, winH + i * 2, 12, 12));
 +					}
 +
 +					g2.setColor(new Color(32, 32, 32));
 +					g2.fill(new RoundRectangle2D.Float(winX, winY, winW, winH, 8, 8));
 +
-+					g2.setColor(new Color(24, 24, 24));
++					// 最前面タイトルバー (Microsoft ブルー〜ダークグラデーション)
++					GradientPaint activeTitleGrad = new GradientPaint(
++						winX, winY, new Color(0, 78, 140),
++						winX + winW, winY, new Color(24, 28, 36)
++					);
++					g2.setPaint(activeTitleGrad);
 +					g2.fill(new RoundRectangle2D.Float(winX, winY, winW, 32, 8, 8));
 +					g2.fillRect(winX, winY + 16, winW, 16);
 +
-+					g2.setColor(new Color(48, 48, 48));
++					g2.setColor(new Color(0, 120, 215));
 +					g2.drawLine(winX, winY + 32, winX + winW, winY + 32);
 +
-+					drawShieldIcon(g2, winX + 10, winY + 8, 16, new Color(0, 120, 215));
++					drawMicrosoftLogo(g2, winX + 12, winY + 9, 14);
++					drawShieldIcon(g2, winX + 32, winY + 8, 16, new Color(0, 164, 239));
 +
-+					g2.setFont(getWinFont(Font.PLAIN, 12));
-+					g2.setColor(new Color(220, 220, 220));
-+					g2.drawString("Windows Defender セキュリティ センター - 緊急システム警告", winX + 34, winY + 21);
++					g2.setFont(getWinFont(Font.BOLD, 12));
++					g2.setColor(new Color(245, 245, 245));
++					g2.drawString("Microsoft Windows Defender セキュリティ センター - 緊急システム警告 (応答なし)", winX + 54, winY + 21);
 +
 +					int btnW = 46;
 +					int btnH = 32;
@@ -1661,7 +1696,9 @@
 +						g2.drawString("✔ ロック解除済み: サポート窓口に連絡するか、操作を選択してください (自動復旧まで あと " + autoSecondsRemaining[0] + " 秒)", winX + 32, winY + winH - 16);
 +					}
 +
-+					g2.setColor(new Color(75, 75, 75));
++					// 最前面ウィンドウのアクセント枠線
++					g2.setColor((cursorTick % 30 < 15) ? new Color(216, 59, 1) : new Color(0, 120, 215));
++					g2.setStroke(new BasicStroke(1.5F));
 +					g2.draw(new RoundRectangle2D.Float(winX, winY, winW, winH, 8, 8));
 +
 +				} else {
@@ -1735,6 +1772,455 @@
 +					g2.drawString("✨", phoneX + phoneW + 35, phoneY + 140);
 +					g2.drawString("⭐", phoneX - 35, phoneY + 150);
 +				}
++			}
++
++			private void drawMicrosoftLogo(Graphics2D g2, int x, int y, int size) {
++				int half = (size - 2) / 2;
++				int gap = 2;
++				// 左上: 赤 (#F25022)
++				g2.setColor(new Color(242, 80, 34));
++				g2.fillRect(x, y, half, half);
++				// 右上: 緑 (#7FBA00)
++				g2.setColor(new Color(127, 186, 0));
++				g2.fillRect(x + half + gap, y, half, half);
++				// 左下: 青 (#00A4EF)
++				g2.setColor(new Color(0, 164, 239));
++				g2.fillRect(x, y + half + gap, half, half);
++				// 右下: 黄 (#FFB900)
++				g2.setColor(new Color(255, 185, 0));
++				g2.fillRect(x + half + gap, y + half + gap, half, half);
++			}
++
++			private void drawWindowChromeButtons(Graphics2D g2, int wx, int wy, int ww, boolean darkTheme) {
++				int btnW = 38;
++				int btnH = 28;
++				int cx = wx + ww - btnW + btnW / 2;
++				int cy = wy + btnH / 2;
++				g2.setColor(new Color(216, 40, 40, 190));
++				g2.fillRect(wx + ww - btnW, wy + 1, btnW - 1, btnH);
++				g2.setColor(Color.WHITE);
++				g2.setStroke(new BasicStroke(1.2F));
++				g2.drawLine(cx - 4, cy - 4, cx + 4, cy + 4);
++				g2.drawLine(cx + 4, cy - 4, cx - 4, cy + 4);
++
++				Color iconCol = darkTheme ? new Color(180, 180, 180) : new Color(90, 90, 90);
++				g2.setColor(iconCol);
++				int mx = wx + ww - btnW * 2 + btnW / 2;
++				g2.drawRect(mx - 4, cy - 4, 8, 8);
++				int minX = wx + ww - btnW * 3 + btnW / 2;
++				g2.drawLine(minX - 4, cy, minX + 4, cy);
++			}
++
++			/**
++			 * Microsoft / Windows セキュリティ ポータル風のフルスクリーン背景を描画
++			 */
++			private void drawMicrosoftBackground(Graphics2D g2, int sw, int sh, int lockSec, int tick) {
++				// 1. Microsoft Fluent ブルーの深いグラデーション背景
++				GradientPaint bgGrad = new GradientPaint(
++					0, 0, new Color(0, 42, 92),
++					sw, sh, new Color(0, 98, 178)
++				);
++				g2.setPaint(bgGrad);
++				g2.fillRect(0, 0, sw, sh);
++
++				// 2. 斜めのFluentライトパネル装飾 & グリッドライン
++				g2.setColor(new Color(255, 255, 255, 10));
++				GeneralPath beam1 = new GeneralPath();
++				beam1.moveTo(sw * 0.15F, 0);
++				beam1.lineTo(sw * 0.55F, 0);
++				beam1.lineTo(sw * 0.25F, sh);
++				beam1.lineTo(0, sh);
++				beam1.closePath();
++				g2.fill(beam1);
++
++				g2.setColor(new Color(0, 164, 239, 18));
++				GeneralPath beam2 = new GeneralPath();
++				beam2.moveTo(sw * 0.65F, 0);
++				beam2.lineTo(sw, 0);
++				beam2.lineTo(sw * 0.80F, sh);
++				beam2.lineTo(sw * 0.40F, sh);
++				beam2.closePath();
++				g2.fill(beam2);
++
++				// 背景の薄いグリッド線
++				g2.setColor(new Color(255, 255, 255, 12));
++				g2.setStroke(new BasicStroke(1.0F));
++				for(int gx = 0; gx < sw; gx += 64) {
++					g2.drawLine(gx, 80, gx, sh - 40);
++				}
++				for(int gy = 80; gy < sh - 40; gy += 64) {
++					g2.drawLine(0, gy, sw, gy);
++				}
++
++				// 3. 背景中央右寄りの巨大 Microsoft ロゴ透かし
++				int wmSize = 240;
++				int wmHalf = 110;
++				int wmX = sw - wmSize - 90;
++				int wmY = sh / 2 - wmSize / 2 + 20;
++				g2.setColor(new Color(255, 255, 255, 14));
++				g2.fillRect(wmX, wmY, wmHalf, wmHalf);
++				g2.fillRect(wmX + wmHalf + 16, wmY, wmHalf, wmHalf);
++				g2.fillRect(wmX, wmY + wmHalf + 16, wmHalf, wmHalf);
++				g2.fillRect(wmX + wmHalf + 16, wmY + wmHalf + 16, wmHalf, wmHalf);
++
++				// 4. 背景に配置された「Windows セキュリティ診断ポータル」情報パネル (左右の余白から覗く演出)
++				g2.setColor(new Color(0, 26, 60, 150));
++				g2.fill(new RoundRectangle2D.Float(24, 100, sw - 48, sh - 160, 10, 10));
++				g2.setColor(new Color(0, 164, 239, 70));
++				g2.draw(new RoundRectangle2D.Float(24, 100, sw - 48, sh - 160, 10, 10));
++
++				g2.setFont(getWinFont(Font.BOLD, 15));
++				g2.setColor(new Color(140, 215, 255, 190));
++				g2.drawString("Windows Defender Cloud Protection - テレメトリ診断レポート (リアルタイム監視)", 48, 132);
++				g2.setFont(getConsoleFont(Font.PLAIN, 12));
++				g2.setColor(new Color(180, 220, 255, 140));
++				g2.drawString("Session ID: MS-DEFENDER-2026-TEMU-EDITION  |  Kernel Integrity: COMPROMISED  |  SmartScreen: LOCKED", 48, 154);
++
++				// 右下側の背景ステータスカード
++				int cardW = 360;
++				int cardH = 150;
++				int cardX = sw - cardW - 44;
++				int cardY = sh - cardH - 68;
++				g2.setColor(new Color(10, 35, 75, 210));
++				g2.fill(new RoundRectangle2D.Float(cardX, cardY, cardW, cardH, 8, 8));
++				g2.setColor(new Color(255, 185, 0, 160));
++				g2.setStroke(new BasicStroke(1.5F));
++				g2.draw(new RoundRectangle2D.Float(cardX, cardY, cardW, cardH, 8, 8));
++
++				drawMicrosoftLogo(g2, cardX + 16, cardY + 16, 20);
++				g2.setFont(getWinFont(Font.BOLD, 13));
++				g2.setColor(Color.WHITE);
++				g2.drawString("Microsoft 認定 TEMU 緊急サポート窓口", cardX + 46, cardY + 31);
++				g2.setFont(getWinFont(Font.PLAIN, 12));
++				g2.setColor(new Color(210, 230, 255));
++				g2.drawString("現在 3 名のセキュリティ技術者が待機中です", cardX + 16, cardY + 58);
++				g2.setFont(getWinFont(Font.BOLD, 18));
++				g2.setColor(new Color(255, 215, 60));
++				g2.drawString("☎ 0120-TEMU-HELP (通話無料)", cardX + 16, cardY + 86);
++				g2.setFont(getWinFont(Font.PLAIN, 11));
++				g2.setColor(new Color(255, 150, 150));
++				g2.drawString("※ 画面を閉じるとバター汚染が進行する場合があります", cardX + 16, cardY + 112);
++				g2.setColor(new Color(160, 210, 255));
++				g2.drawString("認定コード: MS-JP-8810-BUTTER", cardX + 16, cardY + 132);
++
++				// 5. 最上部 Microsoft 公式ポータル風ナビゲーションヘッダーバー (高さ 46px)
++				g2.setColor(new Color(255, 255, 255));
++				g2.fillRect(0, 0, sw, 46);
++				g2.setColor(new Color(210, 210, 210));
++				g2.drawLine(0, 46, sw, 46);
++
++				drawMicrosoftLogo(g2, 22, 13, 20);
++				g2.setFont(new Font("Segoe UI", Font.BOLD, 17));
++				g2.setColor(new Color(90, 90, 90));
++				g2.drawString("Microsoft", 50, 29);
++
++				g2.setColor(new Color(180, 180, 180));
++				g2.drawLine(142, 12, 142, 34);
++
++				g2.setFont(getWinFont(Font.BOLD, 14));
++				g2.setColor(new Color(0, 103, 184));
++				g2.drawString("Windows セキュリティ サポート センター", 156, 28);
++
++				g2.setFont(getWinFont(Font.PLAIN, 12));
++				g2.setColor(new Color(70, 70, 70));
++				g2.drawString("ウイルスと脅威の防止", 440, 28);
++				g2.drawString("ファイアウォール保護", 590, 28);
++				g2.drawString("アカウントの保護", 735, 28);
++				g2.drawString("TEMU 特別補償プログラム", 860, 28);
++
++				// ヘッダー右端のステータスバッジ
++				int pillW = 240;
++				int pillX = sw - pillW - 20;
++				g2.setColor((tick % 20 < 10) ? new Color(209, 52, 56) : new Color(168, 0, 0));
++				g2.fill(new RoundRectangle2D.Float(pillX, 9, pillW, 28, 14, 14));
++				g2.setFont(getWinFont(Font.BOLD, 12));
++				g2.setColor(Color.WHITE);
++				g2.drawString("⚠️ セキュリティ状態: 重大な脅威 (4)", pillX + 16, 27);
++
++				// 6. ヘッダー直下の緊急警告サブバナー (高さ 34px)
++				g2.setColor((tick % 24 < 12) ? new Color(196, 43, 28) : new Color(164, 30, 18));
++				g2.fillRect(0, 46, sw, 34);
++				g2.setFont(getWinFont(Font.BOLD, 13));
++				g2.setColor(Color.WHITE);
++				g2.drawString("🚨 【Microsoft Defender SmartScreen 緊急警報】 お使いの PC から不正な通信 (Trojan:Win32/TemuCursedButter.A) が検出されました。電源を切らないでください。", 24, 68);
++
++				// 7. 最下部 Windows タスクバー風フッター (高さ 40px)
++				int tbY = sh - 40;
++				g2.setColor(new Color(18, 22, 30, 240));
++				g2.fillRect(0, tbY, sw, 40);
++				g2.setColor(new Color(60, 75, 95));
++				g2.drawLine(0, tbY, sw, tbY);
++
++				// Windows スタートボタン風アイコン
++				drawMicrosoftLogo(g2, 16, tbY + 11, 18);
++
++				// 検索ボックス風
++				g2.setColor(new Color(38, 44, 56));
++				g2.fill(new RoundRectangle2D.Float(48, tbY + 6, 220, 28, 6, 6));
++				g2.setColor(new Color(160, 170, 185));
++				g2.setFont(getWinFont(Font.PLAIN, 11));
++				g2.drawString("🔍 ここに入力して検索 (保護ロック中)", 58, tbY + 24);
++
++				// タスクバー上の起動中ウィンドウタブ (4つ重なっている感)
++				String[] taskTabs = new String[]{
++					"🛡️ Windows セキュリティ (スキャン中)",
++					"⬛ 管理者: cmd.exe - defender_diag",
++					"🧱 Windows ファイアウォール通知",
++					"⚠️ 緊急システム警告 (アクティブ)"
++				};
++				int tabX = 282;
++				for(int i = 0; i < taskTabs.length; i++) {
++					int tabW = 215;
++					boolean isActiveTab = (i == 3);
++					g2.setColor(isActiveTab ? new Color(55, 65, 85) : new Color(32, 38, 48));
++					g2.fill(new RoundRectangle2D.Float(tabX, tbY + 5, tabW, 30, 5, 5));
++					g2.setColor(isActiveTab ? new Color(0, 164, 239) : new Color(216, 59, 1));
++					g2.fillRect(tabX + 8, tbY + 33, tabW - 16, 2);
++					g2.setFont(getWinFont(isActiveTab ? Font.BOLD : Font.PLAIN, 11));
++					g2.setColor(isActiveTab ? Color.WHITE : new Color(200, 205, 215));
++					g2.drawString(taskTabs[i], tabX + 10, tbY + 24);
++					tabX += tabW + 8;
++				}
++
++				// タスクバー右端システムトレイ
++				g2.setFont(getWinFont(Font.PLAIN, 11));
++				g2.setColor(new Color(220, 220, 220));
++				g2.drawString("🛡️ 脅威あり   🔊 100%   🌐 185.220.101.5   JPN   19:02", sw - 295, tbY + 24);
++			}
++
++			/**
++			 * 背面ウィンドウ① (左上): Windows セキュリティ - ウイルスと脅威の防止 (白系ライトテーマウィンドウ)
++			 */
++			private void drawBackWindowScan(Graphics2D g2, int wx, int wy, int ww, int wh, int prog, int tick) {
++				// ドロップシャドウ
++				for(int i = 8; i >= 1; i--) {
++					g2.setColor(new Color(0, 0, 0, 10 + (8 - i) * 3));
++					g2.fill(new RoundRectangle2D.Float(wx - i, wy - i + 3, ww + i * 2, wh + i * 2, 10, 10));
++				}
++
++				// ウィンドウ本体 (明るいグレー/白のMicrosoft設定画面風)
++				g2.setColor(new Color(243, 243, 243));
++				g2.fill(new RoundRectangle2D.Float(wx, wy, ww, wh, 8, 8));
++
++				// タイトルバー
++				g2.setColor(new Color(255, 255, 255));
++				g2.fill(new RoundRectangle2D.Float(wx, wy, ww, 30, 8, 8));
++				g2.fillRect(wx, wy + 15, ww, 15);
++				g2.setColor(new Color(215, 215, 215));
++				g2.drawLine(wx, wy + 30, wx + ww, wy + 30);
++
++				drawShieldIcon(g2, wx + 10, wy + 7, 15, new Color(0, 120, 215));
++				g2.setFont(getWinFont(Font.BOLD, 11));
++				g2.setColor(new Color(40, 40, 40));
++				g2.drawString("Windows セキュリティ - ウイルスと脅威の防止 (詳細スキャン)", wx + 32, wy + 20);
++				drawWindowChromeButtons(g2, wx, wy, ww, false);
++
++				// 左サイドメニュー風
++				int sideW = 135;
++				g2.setColor(new Color(230, 232, 236));
++				g2.fillRect(wx + 1, wy + 31, sideW, wh - 32);
++				g2.setFont(getWinFont(Font.PLAIN, 11));
++				g2.setColor(new Color(60, 60, 60));
++				g2.drawString("🏠 ホーム", wx + 14, wy + 56);
++				g2.setColor(new Color(0, 103, 184));
++				g2.fillRect(wx + 2, wy + 68, 3, 20);
++				g2.setFont(getWinFont(Font.BOLD, 11));
++				g2.drawString("🛡️ 脅威の防止", wx + 14, wy + 82);
++				g2.setFont(getWinFont(Font.PLAIN, 11));
++				g2.setColor(new Color(60, 60, 60));
++				g2.drawString("👤 アカウント保護", wx + 14, wy + 108);
++				g2.drawString("🧱 ファイアウォール", wx + 14, wy + 134);
++				g2.drawString("💻 デバイス性能", wx + 14, wy + 160);
++
++				// メイン領域
++				int cx = wx + sideW + 16;
++				int cy = wy + 52;
++				g2.setFont(getWinFont(Font.BOLD, 15));
++				g2.setColor(new Color(196, 43, 28));
++				g2.drawString("❌ 現在の脅威: 4 件の重大なマルウェアが検出されました", cx, cy);
++
++				g2.setFont(getWinFont(Font.PLAIN, 11));
++				g2.setColor(new Color(80, 80, 80));
++				g2.drawString("クイック スキャン完了 - 検査済みファイル: 148,920 個 (隔離失敗)", cx, cy + 20);
++
++				// スキャン結果テーブル
++				String[][] threats = new String[][]{
++					{"Trojan:Win32/TemuCursedButter.A", "重大 (遠隔操作)", "アクティブ"},
++					{"Ransom:Java/LevelDatEncryptor", "重大 (暗号化)", "待機中"},
++					{"Adware:Win32/FreeIPhone35ProMax", "高 (ポップアップ)", "実行中"},
++					{"Backdoor:TCP/TemuRemoteSrv.sys", "重大 (情報送信)", "通信中"}
++				};
++				int rowY = cy + 34;
++				int rowW = ww - sideW - 32;
++				for(int i = 0; i < threats.length; i++) {
++					g2.setColor(Color.WHITE);
++					g2.fill(new RoundRectangle2D.Float(cx, rowY, rowW, 34, 4, 4));
++					g2.setColor(new Color(220, 200, 200));
++					g2.draw(new RoundRectangle2D.Float(cx, rowY, rowW, 34, 4, 4));
++
++					g2.setColor(new Color(209, 52, 56));
++					g2.fillRect(cx, rowY, 4, 34);
++
++					g2.setFont(getConsoleFont(Font.BOLD, 11));
++					g2.setColor(new Color(30, 30, 30));
++					g2.drawString(threats[i][0], cx + 10, rowY + 14);
++
++					g2.setFont(getWinFont(Font.PLAIN, 10));
++					g2.setColor(new Color(180, 40, 40));
++					g2.drawString("深刻度: " + threats[i][1] + "  |  状態: " + threats[i][2], cx + 10, rowY + 28);
++					rowY += 40;
++				}
++
++				// 下部エラーバー
++				g2.setColor(new Color(255, 235, 235));
++				g2.fillRoundRect(cx, wy + wh - 46, rowW, 32, 6, 6);
++				g2.setColor(new Color(216, 59, 1));
++				g2.drawRoundRect(cx, wy + wh - 46, rowW, 32, 6, 6);
++				g2.setFont(getWinFont(Font.BOLD, 11));
++				g2.setColor(new Color(180, 30, 20));
++				g2.drawString("⚠️ 自動駆除エラー (0x80070424): 手動サポート (0120-TEMU-HELP) が必要です", cx + 10, wy + wh - 26);
++
++				// 外枠
++				g2.setColor(new Color(130, 130, 130));
++				g2.setStroke(new BasicStroke(1.0F));
++				g2.draw(new RoundRectangle2D.Float(wx, wy, ww, wh, 8, 8));
++			}
++
++			/**
++			 * 背面ウィンドウ② (右上): 管理者コマンドプロンプト System32 ログ画面
++			 */
++			private void drawBackWindowCmd(Graphics2D g2, int wx, int wy, int ww, int wh, int tick) {
++				// ドロップシャドウ
++				for(int i = 8; i >= 1; i--) {
++					g2.setColor(new Color(0, 0, 0, 12 + (8 - i) * 3));
++					g2.fill(new RoundRectangle2D.Float(wx - i, wy - i + 3, ww + i * 2, wh + i * 2, 8, 8));
++				}
++
++				// 黒いコンソール背景
++				g2.setColor(new Color(12, 12, 12));
++				g2.fill(new RoundRectangle2D.Float(wx, wy, ww, wh, 6, 6));
++
++				// タイトルバー
++				g2.setColor(new Color(38, 38, 38));
++				g2.fill(new RoundRectangle2D.Float(wx, wy, ww, 28, 6, 6));
++				g2.fillRect(wx, wy + 14, ww, 14);
++
++				g2.setColor(new Color(20, 20, 20));
++				g2.fillRect(wx + 10, wy + 7, 16, 14);
++				g2.setFont(getConsoleFont(Font.BOLD, 9));
++				g2.setColor(Color.WHITE);
++				g2.drawString("C:\\", wx + 11, wy + 17);
++
++				g2.setFont(getWinFont(Font.PLAIN, 11));
++				g2.setColor(new Color(220, 220, 220));
++				g2.drawString("管理者: C:\\Windows\\System32\\cmd.exe - defender_diag.exe /trace", wx + 34, wy + 19);
++				drawWindowChromeButtons(g2, wx, wy, ww, true);
++
++				// コンソール出力テキスト
++				int tx = wx + 14;
++				int ty = wy + 48;
++				g2.setFont(getConsoleFont(Font.PLAIN, 12));
++				g2.setColor(new Color(204, 204, 204));
++				g2.drawString("Microsoft Windows [Version 10.0.22631.TEMU]", tx, ty);
++				g2.drawString("(c) Microsoft Corporation. All rights reserved.", tx, ty + 18);
++
++				g2.setColor(new Color(86, 156, 214));
++				g2.drawString("C:\\Windows\\System32> netstat -ano | findstr \"TEMU_RAT\"", tx, ty + 42);
++
++				g2.setColor(new Color(244, 71, 71));
++				g2.drawString("  TCP  192.168.1.104:49812  185.220.101.5:8080  ESTABLISHED  PID:1314", tx, ty + 62);
++				g2.drawString("  TCP  192.168.1.104:49819  185.220.101.5:443   SYN_SENT     PID:1314", tx, ty + 80);
++
++				g2.setColor(new Color(220, 220, 170));
++				g2.drawString("[WARN] Injecting payload: C:\\Windows\\System32\\butter.dll ...", tx, ty + 106);
++				g2.drawString("[WARN] Uploading Minecraft Save: saves\\world\\level.dat (" + Math.min(99, 40 + (tick / 5) % 60) + "%)", tx, ty + 124);
++
++				g2.setColor(new Color(244, 71, 71));
++				g2.drawString("[CRIT] Windows Defender Service (WinDefend) terminated by remote host!", tx, ty + 148);
++				g2.drawString("[CRIT] Security Token Hijacked -> Redirecting to 0120-TEMU-HELP", tx, ty + 166);
++
++				g2.setColor(new Color(78, 201, 176));
++				String blinkCursor = (tick % 16 < 8) ? "_" : "";
++				g2.drawString("C:\\Windows\\System32> awaiting_support_unlock.exe --lock" + blinkCursor, tx, ty + 194);
++
++				g2.setColor(new Color(90, 90, 90));
++				g2.setStroke(new BasicStroke(1.0F));
++				g2.draw(new RoundRectangle2D.Float(wx, wy, ww, wh, 6, 6));
++			}
++
++			/**
++			 * 背面ウィンドウ③ (左下): Microsoft Windows ファイアウォール 緊急ブロック通知ウィンドウ
++			 */
++			private void drawBackWindowFirewall(Graphics2D g2, int wx, int wy, int ww, int wh, int lockSec, int tick) {
++				// ドロップシャドウ
++				for(int i = 8; i >= 1; i--) {
++					g2.setColor(new Color(0, 0, 0, 12 + (8 - i) * 3));
++					g2.fill(new RoundRectangle2D.Float(wx - i, wy - i + 3, ww + i * 2, wh + i * 2, 8, 8));
++				}
++
++				// ウィンドウ本体 (クラシック/モダン混在の白系警告ダイアログ)
++				g2.setColor(new Color(248, 249, 250));
++				g2.fill(new RoundRectangle2D.Float(wx, wy, ww, wh, 8, 8));
++
++				// 赤〜オレンジの警告ヘッダー帯
++				GradientPaint fwGrad = new GradientPaint(
++					wx, wy, new Color(180, 30, 20),
++					wx + ww, wy, new Color(216, 59, 1)
++				);
++				g2.setPaint(fwGrad);
++				g2.fill(new RoundRectangle2D.Float(wx, wy, ww, 30, 8, 8));
++				g2.fillRect(wx, wy + 15, ww, 15);
++
++				drawMicrosoftLogo(g2, wx + 10, wy + 8, 14);
++				g2.setFont(getWinFont(Font.BOLD, 11));
++				g2.setColor(Color.WHITE);
++				g2.drawString("Microsoft Defender ファイアウォール - 重大なセキュリティ警告", wx + 30, wy + 20);
++				drawWindowChromeButtons(g2, wx, wy, ww, true);
++
++				// 本文
++				drawLargeWarningBadge(g2, wx + 18, wy + 46, 36);
++				g2.setFont(getWinFont(Font.BOLD, 13));
++				g2.setColor(new Color(180, 25, 25));
++				g2.drawString("Windows SmartScreen が危険なリモート接続を検知しました", wx + 66, wy + 62);
++
++				g2.setFont(getWinFont(Font.PLAIN, 11));
++				g2.setColor(new Color(50, 50, 50));
++				g2.drawString("プログラム: TemuCouponInjector.exe (発行元: 不明なTEMUサーバー)", wx + 66, wy + 84);
++				g2.drawString("個人情報・マイクラのインベントリデータが外部へ送信されています。", wx + 66, wy + 102);
++
++				// 電話番号強調ボックス
++				g2.setColor(new Color(230, 242, 255));
++				g2.fillRoundRect(wx + 18, wy + 118, ww - 36, 54, 6, 6);
++				g2.setColor(new Color(0, 103, 184));
++				g2.drawRoundRect(wx + 18, wy + 118, ww - 36, 54, 6, 6);
++
++				g2.setFont(getWinFont(Font.BOLD, 12));
++				g2.setColor(new Color(0, 78, 140));
++				g2.drawString("📞 Microsoft セキュリティ緊急窓口: 0120-TEMU-HELP", wx + 30, wy + 140);
++				g2.setFont(getWinFont(Font.PLAIN, 11));
++				g2.setColor(new Color(60, 60, 60));
++				g2.drawString("エラーコード: DW-0x80070424  |  ステータス: 画面ロック保護中", wx + 30, wy + 160);
++
++				// 下部ダミーボタン群
++				g2.setColor(new Color(235, 235, 235));
++				g2.fillRect(wx + 1, wy + wh - 44, ww - 2, 43);
++				g2.setColor(new Color(210, 210, 210));
++				g2.drawLine(wx, wy + wh - 44, wx + ww, wy + wh - 44);
++
++				g2.setColor(new Color(0, 103, 184));
++				g2.fillRoundRect(wx + ww - 230, wy + wh - 34, 110, 24, 4, 4);
++				g2.setFont(getWinFont(Font.BOLD, 11));
++				g2.setColor(Color.WHITE);
++				g2.drawString("通信を遮断(ロック)", wx + ww - 222, wy + wh - 18);
++
++				g2.setColor(new Color(200, 200, 200));
++				g2.fillRoundRect(wx + ww - 110, wy + wh - 34, 92, 24, 4, 4);
++				g2.setColor(new Color(100, 100, 100));
++				g2.drawString("アクセス許可", wx + ww - 98, wy + wh - 18);
++
++				g2.setColor(new Color(150, 150, 150));
++				g2.setStroke(new BasicStroke(1.0F));
++				g2.draw(new RoundRectangle2D.Float(wx, wy, ww, wh, 8, 8));
 +			}
 +
 +			private void drawCenteredText(Graphics2D g2, String text, int cx, int y) {
