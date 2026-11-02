@@ -313,7 +313,7 @@ const App = {
     const toast = document.getElementById("liveActivityToast");
     if (!toast) return;
 
-    const names = ["PublicVoic博士", "Binary444ちゃん", "長いAlex", "1つ目のSteveさん", "胴長Steve", "1つ目のXXX"];
+    const names = ["PublicVoid博士", "Binary444ちゃん", "長いAlex", "1つ目のSteveさん", "胴長Steve", "1つ目のXXX", "脚長Steve", "PP様", "YY君"];
     const items = PRODUCTS.map(p => p.title.slice(0, 18) + "...");
 
     function showRandom() {
